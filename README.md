@@ -11,5 +11,10 @@ price level(s)
 - The smart order router: Given a limit or market order, which venue should this order be
 sent to?
   
+# TO READ: 
 
+- [Market impact models and optimal execution algorithms](https://www.imperial.ac.uk/media/imperial-college/research-centres-and-groups/cfm-imperial-institute-of-quantitative-finance/events/Lillo-Imperial-Lecture3.pdf)
 
+- [Optimal execution strategies in limit order books with general shape functions](https://arxiv.org/abs/0708.1756)
+  
+- [Three models of market impact](https://mfe.baruch.cuny.edu/wp-content/uploads/2017/05/Chicago2016OptimalExecution.pdf)
