@@ -6,3 +6,21 @@ TSE_ISNT_INFO_URL = "http://www.tsetmc.com/tsev2/data/instinfofast.aspx?i={}&c=0
 CHROME_EXECUTABLE_PATH = (
     "/Users/sina/tmp/trade_exec/exectrade/execution_engine/chromedriver"
 )
+MOFID = {
+    "base_login_url": "https://d.easytrader.emofid.com",
+    "mobile_login_url": "https://mobile.emofid.com",
+    "alternative_login_url": "https://mofidonline.com/login?checkmobile=false",
+    "order_url": "https://easy-api.emofid.com/easy/api/OmsOrder",
+    "get_liquidity_url": "https://easy-api.emofid.com/easy/api/Money/GetRemain",
+    "get_user_data_url": (
+        "https://easy-api.emofid.com/easy/api/account/GetUserBourseCode"
+    ),
+    # self.get_transactions_url = "https://easy-api.emofid.com/easy/api/transaction/getd"
+    "get_assets_url": "https://easy-api.emofid.com/easy/api/portfolio",
+    "market_watch_url": "https://easy-api.emofid.com/easy/api/MarketWatch",
+    "get_orders_history_url": (
+        "https://easy-api.emofid.com/easy/api/OrderHistory/getd"
+    ),
+    "get_symbol_data_url": "https://easy-api.emofid.com/easy/api/MarketData/GetSymbolDetailsData/{}/SymbolInfo",
+    "get_symbol_market_depth_url": "https://easy-api.emofid.com/easy/api/MarketData/GetSymbolDetailsData/{}/marketDepth",
+}
