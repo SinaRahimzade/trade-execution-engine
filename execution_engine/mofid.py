@@ -130,7 +130,7 @@ class MofidBroker(Authentication, ABC):
 
     def send_order(self, order_type, ticker_isin_code, quantity, price):
 
-        while self.LOGIN_TOKEN is None:
+        while self.login_token is None:
 
             try:
                 self.account_login()
@@ -162,7 +162,7 @@ class MofidBroker(Authentication, ABC):
 
     def market_watch(self, watchlist_name):
 
-        while self.LOGIN_TOKEN is None:
+        while self.login_token is None:
 
             try:
                 self.account_login()
@@ -188,7 +188,7 @@ class MofidBroker(Authentication, ABC):
         return watching_tickers
 
     def get_orders_history(self, count=50):
-        while self.LOGIN_TOKEN is None:
+        while self.login_token is None:
             try:
                 self.account_login()
             except selenium.common.NoSuchElementException:
@@ -202,7 +202,7 @@ class MofidBroker(Authentication, ABC):
         return request_response
 
     def get_symbol_data(self, ticker_isin_code):
-        while self.LOGIN_TOKEN is None:
+        while self.login_token is None:
             try:
                 self.account_login()
                 # time.sleep(2)
@@ -216,7 +216,7 @@ class MofidBroker(Authentication, ABC):
         return request_response
 
     def get_symbol_market_depth(self, ticker_isin_code):
-        while self.LOGIN_TOKEN is None:
+        while self.login_token is None:
             try:
                 self.account_login()
             except selenium.common.NoSuchElementException:
