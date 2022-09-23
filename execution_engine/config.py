@@ -4,7 +4,7 @@ TSE_MARKET_WATCH_PLUS = (
 TSE_ISNT_INFO_URL = "http://www.tsetmc.com/tsev2/data/instinfofast.aspx?i={}&c=0&e=1"
 
 CHROME_EXECUTABLE_PATH = (
-    "/Users/sina/tmp/trade_exec/exectrade/execution_engine/chromedriver"
+    "/Users/sina/tmp/trade_exec/exectrade/execution_engine/drivers/chromedriver"
 )
 MOFID = {
     "base_login_url": "https://d.easytrader.emofid.com",
