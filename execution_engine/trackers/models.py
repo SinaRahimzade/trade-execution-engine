@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from pytse_client import symbols_data
 
-from execution_engine.brokers import MofidBroker
+from execution_engine.mofid import MofidBroker
 
 
 @dataclass
