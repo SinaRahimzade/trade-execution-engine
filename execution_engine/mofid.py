@@ -25,11 +25,15 @@ class Authentication(ABC):
 
 
 class MofidBroker(Authentication, ABC):
-    def __init__(self, username, password):
+    def __init__(self, username, password, login=True):
         Authentication.__init__(self)
         self.username = username
         self.password = password
-        self.login_token = None
+        if login:
+            self.account_login()
+            self.save_login_token()
+        else:
+            self.read_login_token()
 
     def _headers(self):
         return {
@@ -41,6 +45,14 @@ class MofidBroker(Authentication, ABC):
             "sec-ch-ua": '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
             "sec-ch-ua-mobile": "?0",
         }
+
+    def save_login_token(self):
+        with open("login_token.txt", "w") as f:
+            f.write(self.login_token)
+
+    def read_login_token(self):
+        with open("login_token.txt", "r") as f:
+            self.login_token = f.read()
 
     def account_login(self):
         capabilities = DesiredCapabilities.CHROME
@@ -114,7 +126,7 @@ class MofidBroker(Authentication, ABC):
         request_response = requests.get(
             url=config.MOFID["get_assets_url"], headers=self._headers()
         )
-        return request_response
+        return request_response.json()
 
     def get_liquidity(self):
         while self.login_token is None:
