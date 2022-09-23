@@ -17,7 +17,6 @@ import execution_engine.config as config
 
 class Authentication(ABC):
     def __init__(self):
-        self.chrome_executable_path = config.CHROME_EXECUTABLE_PATH
         self.driver = None
 
     @abstractmethod
@@ -52,18 +51,19 @@ class MofidBroker(Authentication, ABC):
         )
         try:
             self.driver = webdriver.Chrome(
-                executable_path=self.chrome_executable_path,
+                executable_path=config.CHROME_EXECUTABLE_PATH,
                 options=chrome_options,
                 desired_capabilities=capabilities,
             )
         except selenium.common.SessionNotCreatedException:
+            print("hi")
 
             self.driver = webdriver.Chrome(
                 ChromeDriverManager().install(),
                 options=chrome_options,
                 desired_capabilities=capabilities,
             )
-        self.driver.get(self.mobile_login_url)
+        self.driver.get(config.MOFID["mobile_login_url"])
         timeout = 60
         try:
             element_present = expected_conditions.presence_of_element_located(
@@ -95,7 +95,7 @@ class MofidBroker(Authentication, ABC):
                     if "request" in log["params"]:
                         if "headers" in log["params"]["request"]:
                             if "Authorization" in log["params"]["request"]["headers"]:
-                                self.LOGIN_TOKEN = log["params"]["request"]["headers"][
+                                self.login_token = log["params"]["request"]["headers"][
                                     "Authorization"
                                 ]
                                 log_was_successful = True
@@ -112,7 +112,7 @@ class MofidBroker(Authentication, ABC):
             except selenium.common.NoSuchElementException:
                 pass
         request_response = requests.get(
-            url=self.get_assets_url, headers=self._headers()
+            url=config.MOFID["get_assets_url"], headers=self._headers()
         )
         return request_response
 
@@ -124,18 +124,14 @@ class MofidBroker(Authentication, ABC):
             except selenium.common.NoSuchElementException:
                 pass
         request_response = requests.get(
-            url=self.get_liquidity_url, headers=self._headers()
+            url=config.MOFID["get_liquidity_url"], headers=self._headers()
         )
         return request_response
 
     def send_order(self, order_type, ticker_isin_code, quantity, price):
-
         while self.login_token is None:
-
             try:
                 self.account_login()
-                # time.sleep(2)
-
             except selenium.common.NoSuchElementException:
                 pass
 
@@ -155,7 +151,9 @@ class MofidBroker(Authentication, ABC):
         }
 
         request_response = requests.post(
-            url=self.order_url, headers=self._headers(), json=payload_template
+            url=config.MOFID["order_url"],
+            headers=self._headers(),
+            json=payload_template,
         )
 
         return request_response
@@ -172,7 +170,9 @@ class MofidBroker(Authentication, ABC):
                 pass
 
         request_response = json.loads(
-            requests.get(url=self.market_watch_url, headers=self._headers()).text
+            requests.get(
+                url=config.MOFID["market_watch_url"], headers=self._headers()
+            ).text
         )
 
         watching_tickers = None
@@ -195,7 +195,7 @@ class MofidBroker(Authentication, ABC):
                 pass
         payload_template = {"page": 0, "size": count}
         request_response = requests.post(
-            url=self.get_orders_history_url,
+            url=config.MOFID["get_orders_history_url"],
             headers=self._headers(),
             json=payload_template,
         )
@@ -209,7 +209,7 @@ class MofidBroker(Authentication, ABC):
             except selenium.common.NoSuchElementException:
                 pass
         request_response = requests.get(
-            url=self.get_symbol_data_url.format(ticker_isin_code),
+            url=config.MOFID["get_symbol_data"].format(ticker_isin_code),
             headers=self._headers(),
         )
 
@@ -245,7 +245,7 @@ class MofidBroker(Authentication, ABC):
         }
 
         request_response = requests.get(
-            url=self.get_symbol_market_depth_url.format(ticker_isin_code),
+            url=config.MOFID["get_symbol_market_depth_url"].format(ticker_isin_code),
             headers=headers_template,
         )
 
