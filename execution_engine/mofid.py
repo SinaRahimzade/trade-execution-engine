@@ -1,6 +1,8 @@
+import datetime
 import json
 import time
 from abc import ABC, abstractmethod
+from typing import Dict
 
 import jdatetime
 import requests
@@ -13,9 +15,27 @@ from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
 import execution_engine.config as config
+from execution_engine.trackers.models import Asset
 
 
-class Authentication(ABC):
+def asset_mapper(asset: dict) -> Asset:
+    return Asset(
+        quantity=asset["quantity"],
+        isin=asset["isin"],
+        total_quantity_buy=asset["totalQuantityBuy"],
+        total_quantity_sell=asset["totalQuantitySell"],
+        new_buy=asset["newBuy"],
+        new_sell=asset["newSell"],
+        last_trade_price=asset["lastTradedPrice"],
+        price_var=asset["priceVar"],
+        first_symbol_state=asset["firstSymbolState"],
+        symbol=asset["symbol"],
+        market_unit=asset["marketUnit"],
+        asset_id=asset["id"],
+    )
+
+
+class Broker(ABC):
     def __init__(self):
         self.driver = None
 
@@ -23,10 +43,14 @@ class Authentication(ABC):
     def account_login(self):
         pass
 
+    @abstractmethod
+    def portfolio(self) -> Dict[str, Asset]:
+        pass
 
-class MofidBroker(Authentication, ABC):
+
+class MofidBroker(Broker, ABC):
     def __init__(self, username, password, login=True):
-        Authentication.__init__(self)
+        Broker.__init__(self)
         self.username = username
         self.password = password
         if login:
@@ -262,3 +286,9 @@ class MofidBroker(Authentication, ABC):
         )
 
         return request_response
+
+    def portfolio(self) -> Dict[str, Asset]:
+        portfolio = {}
+        for asset in self.get_portfolio()["items"]:
+            portfolio[asset["symbol"]] = asset_mapper(asset)
+        return portfolio
