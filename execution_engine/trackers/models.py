@@ -7,8 +7,6 @@ from typing import List, Optional
 
 from pytse_client import symbols_data
 
-from execution_engine.mofid import MofidBroker
-
 
 @dataclass
 class TradeSummary:
@@ -55,6 +53,22 @@ class Tracker:
     ticker_info: RealtimeTickerInfo
     inventory: int
     time: int
+
+
+@dataclass
+class Asset:
+    quantity: int
+    isin: str
+    total_quantity_buy: int
+    total_quantity_sell: int
+    new_buy: int
+    new_sell: int
+    last_trade_price: float
+    price_var: float
+    first_symbol_state: str
+    symbol: str
+    market_unit: str
+    asset_id: str
 
 
 class AbstractTracker(ABC):
