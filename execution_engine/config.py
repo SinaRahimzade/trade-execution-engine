@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 TSE_MARKET_WATCH_PLUS = (
     "http://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=10392282875"
 )
@@ -24,3 +26,10 @@ MOFID = {
     "get_symbol_data_url": "https://easy-api.emofid.com/easy/api/MarketData/GetSymbolDetailsData/{}/SymbolInfo",
     "get_symbol_market_depth_url": "https://easy-api.emofid.com/easy/api/MarketData/GetSymbolDetailsData/{}/marketDepth",
 }
+
+
+@dataclass
+class Influx:
+    token = "7VqIFiNN5RmJX9_CmaNiCo5jKTGkC0dchJIv0MSiJi7jwTN3Ziw89T0i2JmtX9uvBl91Ehy4i0f0oUk9k8GZPQ=="
+    org = "delta"
+    bucket = "stocks"
