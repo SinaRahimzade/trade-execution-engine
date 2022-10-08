@@ -112,6 +112,7 @@ class MofidBroker(Broker, ABC):
         password_form = self.driver.find_element(By.ID, "Password")
         username_form.send_keys(self.username)
         password_form.send_keys(self.password)
+        time.sleep(2)
         login_button = self.driver.find_element(By.ID, "submit_btn")
         login_button.click()
         try:
@@ -165,6 +166,12 @@ class MofidBroker(Broker, ABC):
         return request_response
 
     def send_order(self, order_type, ticker_isin_code, quantity, price):
+        print(
+            "sending order: {} {} {} {}".format(
+                order_type, ticker_isin_code, quantity, price
+            )
+        )
+
         while self.login_token is None:
             try:
                 self.account_login()
