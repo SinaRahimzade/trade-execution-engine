@@ -126,15 +126,16 @@ class AbstractAcquisition(ABC):
     def run(self, tracker, oms):
         while True:
             order = self.get_order(tracker)
-            self.send_order(order, oms)
+            if order is not None:
+                self.send_order(order, oms)
             time.sleep(self.time_step)
 
     def send_order(self, order: SendingOrder, oms):
         oms.send_order(
-            self.SIDE,
-            self.isin,
-            order.count,
-            order.price,
+            order_type=self.SIDE,
+            ticker_isin_code=self.isin,
+            quantity=order.count,
+            price=order.price,
         )
 
 
