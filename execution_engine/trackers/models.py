@@ -46,6 +46,17 @@ class RealtimeTickerInfo:
     nav_date: Optional[str]
     # ارزش بازار
     market_cap: Optional[int]
+    sector: Optional[str] = None
+    symbol: Optional[str] = None
+
+    def to_line_protocol(self):
+        return f"ticker_info,symbol={self.symbol},sector={self.sector} last_price={self.last_price},adj_close={self.adj_close},volume={self.volume},value={self.value},best_demand_vol={self.best_demand_vol},best_demand_price={self.best_demand_price},best_supply_vol={self.best_supply_vol},best_supply_price={self.best_supply_price}"
+
+    def set_supply_demand(self, orders: List[Order]):
+        self.best_supply_vol = orders[1].volume
+        self.best_supply_price = orders[1].price
+        self.best_demand_vol = orders[0].volume
+        self.best_demand_price = orders[0].price
 
 
 @dataclass
