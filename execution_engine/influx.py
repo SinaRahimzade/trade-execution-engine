@@ -1,9 +1,10 @@
 from datetime import datetime
 from time import sleep
-from influxdb_client import InfluxDBClient, Point, WritePrecision
-from influxdb_client.client.write_api import SYNCHRONOUS, ASYNCHRONOUS
-from execution_engine.trackers.tse import TseMultipleTickerTracker
 
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import ASYNCHRONOUS, SYNCHRONOUS
+
+from execution_engine.trackers.tse import TseMultipleTickerTracker
 
 # You can generate an API token from the "API Tokens Tab" in the UI
 token = "7VqIFiNN5RmJX9_CmaNiCo5jKTGkC0dchJIv0MSiJi7jwTN3Ziw89T0i2JmtX9uvBl91Ehy4i0f0oUk9k8GZPQ=="
