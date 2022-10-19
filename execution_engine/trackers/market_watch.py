@@ -2,6 +2,7 @@ import asyncio
 import datetime
 from collections import namedtuple
 from dataclasses import dataclass
+from time import time
 from typing import List
 
 import bs4
@@ -10,7 +11,37 @@ import requests
 from aiohttp import ClientSession
 from pytse_client import symbols_data
 
-Ohlcv = namedtuple("ohlcv", ["open", "high", "low", "close", "volume", "date"])
+from execution_engine.utils.time_utils import time_ceil, time_floor
+
+Tick = namedtuple("Tick", ["time", "volume", "price"])
+
+
+@dataclass
+class LastCandle:
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    date: datetime.datetime
+
+    def __post_init__(self):
+        self.start_date = time_floor(self.date, 1)
+        self.end_date = time_ceil(self.date, 1)
+        self.status = "open"
+
+    def update(self, tick: namedtuple):
+        if tick.time < self.start_date:
+            raise ValueError(
+                "Tick time is before candle start time, make sure you are using sorted ticks"
+            )
+        if tick.time > self.end_date:
+            self.status = "closed"
+            return self
+        self.high = max(self.high, tick.price)
+        self.low = min(self.low, tick.price)
+        self.close = tick.price
+        self.volume += tick.volume
 
 
 class MarketWatch:
@@ -19,6 +50,7 @@ class MarketWatch:
     def __init__(self, symbols: List[str]):
         self.symbols = symbols
         self.tickers_id = [symbols_data.get_ticker_index(symbol) for symbol in symbols]
+        self.trade_counts_buffer = dict(zip(self.symbols, [0] * len(self.symbols)))
 
     def _urls(self):
         return [self.TRADE_URL.format(ticker_id) for ticker_id in self.tickers_id]
@@ -35,6 +67,7 @@ class MarketWatch:
 
     # FIX IT Later, Make it awaitble
     async def _parse_trade_details(self, content):
+
         soup = bs4.BeautifulSoup(content, "lxml")
         xml_rows = soup.find_all("row")
         rows = []
@@ -45,8 +78,8 @@ class MarketWatch:
                 int(cells[2].text),
                 float(cells[3].text),
             ]
-            rows.append(row)
-        return pd.DataFrame(rows, columns=["date", "volume", "price"])
+            rows.append(Tick(*row))
+        return rows
 
     def get_all_info(self):
         return asyncio.run(self._get_all_info())
