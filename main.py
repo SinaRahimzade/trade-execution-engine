@@ -1,15 +1,14 @@
-from time import sleep
-
-from pytse_client import symbols_data
-
+from execution_engine.trackers.models import AbstractTracker
 from execution_engine.algos import almen_chris, ghasem
 from execution_engine.mofid import MofidBroker
 from execution_engine.trackers import tse
-from execution_engine.trackers.models import AbstractTracker
+from pytse_client import symbols_data
+from time import sleep
 
 
 class TestTracker(AbstractTracker):
     def __init__(self, ticker: str):
+        AbstractTracker.__init__(self, ticker)
         self.ticker = ticker
         self.ticker_tracker = tse.TseTickerTracker(ticker)
 
@@ -27,8 +26,9 @@ class TestTracker(AbstractTracker):
 
 
 class Oms:
-    def send_order(self, type, isin, quant, price):
-        print(f"Sending order: {type}, {isin}, {quant}, {price}")
+    @staticmethod
+    def send_order(order_type, isin, quant, price):
+        print(f"Sending order: {order_type}, {isin}, {quant}, {price}")
 
 
 username = "09123152886"
