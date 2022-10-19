@@ -1,11 +1,19 @@
 import datetime
-from typing import Dict, List, Tuple
+import symbol
+from typing import Dict, List, Tuple, Union
 
 from pytse_client import symbols_data
+from random_user_agent.params import OperatingSystem, SoftwareName
+from random_user_agent.user_agent import UserAgent
+from requests import request, session
 
 from execution_engine.config import TSE_ISNT_INFO_URL
-from execution_engine.trackers.models import (AbstractTickerTracker, Order,
-                                              RealtimeTickerInfo, TradeSummary)
+from execution_engine.trackers.models import (
+    AbstractTickerTracker,
+    Order,
+    RealtimeTickerInfo,
+    TradeSummary,
+)
 from execution_engine.utils.request_session import requests_retry_session
 
 
@@ -73,12 +81,12 @@ def get_corporate_trade_summary(corporate_trade_summary_section):
     )
 
 
-class TseTickerTracker(AbstractTickerTracker): 
+class TseTickerTracker(AbstractTickerTracker):
     def __init__(self, ticker: str):
-        super().__init__(ticker) 
-        self.ticker = ticker 
-        self._index = symbols_data.get_ticker_index(ticker) 
-        self._info_url = TSE_ISNT_INFO_URL.format(self._index) 
+        super().__init__(ticker)
+        self.ticker = ticker
+        self._index = symbols_data.get_ticker_index(ticker)
+        self._info_url = TSE_ISNT_INFO_URL.format(self._index)
         self.symbol = ticker
 
     def get_ticker_info(self) -> RealtimeTickerInfo:
@@ -144,18 +152,10 @@ class TseTickerTracker(AbstractTickerTracker):
         try:
             orders_section = response_sections_list[2]
             buy_orders, sell_orders = get_orders(orders_section)
-            best_demand_vol = (
-                buy_orders[0].volume if 0 < len(buy_orders) else None
-            )
-            best_demand_price = (
-                buy_orders[0].price if 0 < len(buy_orders) else None
-            )
-            best_supply_vol = (
-                sell_orders[0].volume if 0 < len(sell_orders) else None
-            )
-            best_supply_price = (
-                sell_orders[0].price if 0 < len(sell_orders) else None
-            )
+            best_demand_vol = buy_orders[0].volume if 0 < len(buy_orders) else None
+            best_demand_price = buy_orders[0].price if 0 < len(buy_orders) else None
+            best_supply_vol = sell_orders[0].volume if 0 < len(sell_orders) else None
+            best_supply_price = sell_orders[0].price if 0 < len(sell_orders) else None
         except (IndexError):
             buy_orders = []
             sell_orders = []
@@ -171,9 +171,7 @@ class TseTickerTracker(AbstractTickerTracker):
             individual_trade_summary = get_individual_trade_summary(
                 trade_summary_section
             )
-            corporate_trade_summary = get_corporate_trade_summary(
-                trade_summary_section
-            )
+            corporate_trade_summary = get_corporate_trade_summary(trade_summary_section)
         else:
 
             individual_trade_summary = None
@@ -229,7 +227,89 @@ class TseTickerTracker(AbstractTickerTracker):
         }
         return states.get(state_code, "")
 
-        
 
+class TseMultipleTickerTracker:
+    def _info_url(self) -> str:
+        return "http://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=10392282875"
 
-    
+    def get_raw_info(self) -> str:
+        session = requests_retry_session()
+        response = session.get(self._info_url(), headers=self._get_headers(), timeout=5)
+        session.close()
+        return response.text.split(";")[1:]
+
+    def get_info(self) -> List[RealtimeTickerInfo]:
+        buffer = {}
+        raw_data = self.get_raw_info()
+        for data in raw_data:
+            content = data.split(",")
+            ticker_id = content[0]
+            if len(content) == 23:
+                buffer[ticker_id] = TseMultipleTickerTracker._parse_ticker_info(content)
+            elif len(content) == 8:
+                if int(content[1]) == 1:
+                    try:
+                        buffer[ticker_id].set_supply_demand(
+                            TseMultipleTickerTracker._pars_order_info(content)
+                        )
+                    except KeyError:
+                        print("ticker info not found for id : {}".format(ticker_id))
+                else:
+                    pass
+            else:
+                print("Unknown data format: {}".format(content))
+        return list(buffer.values())
+
+    def _parse_ticker_info(content: list) -> RealtimeTickerInfo:
+        return RealtimeTickerInfo(
+            symbol=content[2],
+            last_price=float(content[7]),
+            adj_close=float(content[6]),
+            yesterday_price=float(content[13]),
+            open_price=float(content[5]),
+            high_price=float(content[12]),
+            low_price=float(content[11]),
+            count=int(content[8]),
+            volume=int(content[9]),
+            value=int(content[10]),
+            last_date=datetime.datetime.now(),
+            sector=content[18],  # check if this is correct
+            best_demand_vol=None,
+            best_demand_price=None,
+            best_supply_vol=None,
+            best_supply_price=None,
+            buy_orders=None,
+            sell_orders=None,
+            individual_trade_summary=None,
+            corporate_trade_summary=None,
+            nav=None,
+            market_cap=None,
+            nav_date=None,
+            state=None,
+        )
+
+    def _pars_order_info(content: list) -> Tuple[Order, Order]:
+        return Order(price=content[4], volume=content[6], count=content[3]), Order(
+            price=content[5], volume=content[7], count=content[2]
+        )
+
+    def _get_headers(self) -> dict:
+        software_names = [
+            SoftwareName.CHROME.value,
+            SoftwareName.FIREFOX.value,
+            SoftwareName.OPERA.value,
+        ]
+        operating_systems = [
+            OperatingSystem.WINDOWS.value,
+            OperatingSystem.LINUX.value,
+            OperatingSystem.MACOS.value,
+        ]
+        user_agent_rotator = UserAgent(
+            software_names=software_names,
+            operating_systems=operating_systems,
+            limit=100,
+        )
+        return {
+            "Connection": "keep-alive",
+            "User-Agent": user_agent_rotator.get_random_user_agent(),
+        }

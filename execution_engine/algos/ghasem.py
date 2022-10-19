@@ -32,7 +32,9 @@ class Ghasem(AbstractAcquisition):
                 int(int(info.get_ticker_info().sell_orders[0].volume) * 0.5),
                 self.final_inventory - inventory,
             )
-            return SendingOrder(info.get_ticker_info().best_supply_price, min_quant)
+            return SendingOrder(
+                price=info.get_ticker_info().best_supply_price, count=min_quant
+            )
 
     def buy_condition(self, info: AbstractTracker) -> bool:
         print(

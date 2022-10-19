@@ -1,13 +1,37 @@
-from downloader import get_all_data_concurrent
-from signals import buy_signals, sell_signals
-import pytse_client as ptc
+from execution_engine.trackers.models import AbstractTracker
+from execution_engine.algos import almen_chris, ghasem
+from execution_engine.mofid import MofidBroker
+from execution_engine.trackers import tse
+from pytse_client import symbols_data
+from time import sleep
 
 
-whole_market_data = get_all_data_concurrent()
-tickers_list = ['ساینا', 'فولاد', 'بنو', 'شتولی', 'وخارزم', 'مفاخر', 'خودرو']
-tickers_id_list = [ptc.Ticker(ticker).url.split('=')[-1] for ticker in tickers_list]
+class TestTracker(AbstractTracker):
+    def __init__(self, ticker: str):
+        AbstractTracker.__init__(self, ticker)
+        self.ticker = ticker
+        self.ticker_tracker = tse.TseTickerTracker(ticker)
 
-tickers_data = dict(zip(tickers_list, [whole_market_data[ticker] for ticker in tickers_id_list]))
+    def get_ticker_info(self) -> tse.RealtimeTickerInfo:
+        return self.ticker_tracker.get_ticker_info()
 
-tickers_to_buy = list(buy_signals(tickers_data))
-ticker_to_sell = list(sell_signals(tickers_data))
+    def get_inventory(self) -> int:
+        return 0
+
+    def get_time(self) -> int:
+        return 0
+
+    def get_tracker(self):
+        return None
+
+
+class Oms:
+    @staticmethod
+    def send_order(order_type, isin, quant, price):
+        print(f"Sending order: {order_type}, {isin}, {quant}, {price}")
+
+
+username = "09123152886"
+password = "14@15Dali110"
+oms = MofidBroker(username=username, password=password)
+print(oms.get_portfolio().text)

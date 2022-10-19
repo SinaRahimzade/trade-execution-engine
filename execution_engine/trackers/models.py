@@ -7,8 +7,6 @@ from typing import List, Optional
 
 from pytse_client import symbols_data
 
-from execution_engine.brokers import MofidBroker
-
 
 @dataclass
 class TradeSummary:
@@ -48,6 +46,17 @@ class RealtimeTickerInfo:
     nav_date: Optional[str]
     # ارزش بازار
     market_cap: Optional[int]
+    sector: Optional[str] = None
+    symbol: Optional[str] = None
+
+    def to_line_protocol(self):
+        return f"ticker_info,symbol={self.symbol},sector={self.sector} last_price={self.last_price},adj_close={self.adj_close},volume={self.volume},value={self.value},best_demand_vol={self.best_demand_vol},best_demand_price={self.best_demand_price},best_supply_vol={self.best_supply_vol},best_supply_price={self.best_supply_price}"
+
+    def set_supply_demand(self, orders: List[Order]):
+        self.best_supply_vol = orders[1].volume
+        self.best_supply_price = orders[1].price
+        self.best_demand_vol = orders[0].volume
+        self.best_demand_price = orders[0].price
 
 
 @dataclass
@@ -55,6 +64,22 @@ class Tracker:
     ticker_info: RealtimeTickerInfo
     inventory: int
     time: int
+
+
+@dataclass
+class Asset:
+    quantity: int
+    isin: str
+    total_quantity_buy: int
+    total_quantity_sell: int
+    new_buy: int
+    new_sell: int
+    last_trade_price: float
+    price_var: float
+    first_symbol_state: str
+    symbol: str
+    market_unit: str
+    asset_id: str
 
 
 class AbstractTracker(ABC):
@@ -112,15 +137,16 @@ class AbstractAcquisition(ABC):
     def run(self, tracker, oms):
         while True:
             order = self.get_order(tracker)
-            self.send_order(order, oms)
+            if order is not None:
+                self.send_order(order, oms)
             time.sleep(self.time_step)
 
     def send_order(self, order: SendingOrder, oms):
         oms.send_order(
-            self.SIDE,
-            self.isin,
-            order.count,
-            order.price,
+            order_type=self.SIDE,
+            ticker_isin_code=self.isin,
+            quantity=order.count,
+            price=order.price,
         )
 
 
