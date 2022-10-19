@@ -1,11 +1,12 @@
-import datetime
-import time
+from pytse_client import symbols_data
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from dataclasses import dataclass
 from typing import List, Optional
-
-from pytse_client import symbols_data
+import plotly.graph_objs as go
+import pandas as pd
+import datetime
+import time
 
 
 @dataclass
@@ -83,8 +84,8 @@ class Asset:
 
 
 class AbstractTracker(ABC):
-    def __init__(self, tikcer: str):
-        self.ticker = tikcer
+    def __init__(self, ticker: str):
+        self.ticker = ticker
 
     @abstractmethod
     def get_ticker_info(self) -> RealtimeTickerInfo:
@@ -105,9 +106,9 @@ class AbstractTracker(ABC):
 
 class AbstractLiquidation(ABC):
     def __init__(
-        self, tikcer: str, initial_inventory: int, time_step: int, expiry: int
+        self, ticker: str, initial_inventory: int, time_step: int, expiry: int
     ):
-        self.ticker = tikcer
+        self.ticker = ticker
         self.initial_deposit = initial_inventory
         self.time_step = time_step
         self.expiry = expiry
@@ -123,9 +124,9 @@ class AbstractLiquidation(ABC):
 class AbstractAcquisition(ABC):
     SIDE = 0
 
-    def __init__(self, tikcer: str, final_inventory: int, time_step: int, expiry: int):
-        self.ticker = tikcer
-        self.isin = symbols_data.symbols_information()[tikcer]["code"]
+    def __init__(self, ticker: str, final_inventory: int, time_step: int, expiry: int):
+        self.ticker = ticker
+        self.isin = symbols_data.symbols_information()[ticker]["code"]
         self.initial_deposit = final_inventory
         self.time_step = time_step
         self.expiry = expiry
@@ -148,6 +149,62 @@ class AbstractAcquisition(ABC):
             quantity=order.count,
             price=order.price,
         )
+
+
+class AbstractAlgorithms(ABC):
+
+    def __init__(self, ticker: str, time_step: int):
+
+        self.ticker = ticker
+        self.time_step = time_step
+
+    @abstractmethod
+    def generate_signal(self):
+        pass
+
+    @abstractmethod
+    def get_intraday_data(self):
+        pass
+
+    @abstractmethod
+    def get_daily_data(self):
+        pass
+
+    @abstractmethod
+    def visualize_signals(self, timeframe: str):
+
+        dataframe = None
+
+        if timeframe.lower() == 'daily':
+            dataframe = self.get_daily_data()
+        elif timeframe.lower() == 'intraday':
+            dataframe = self.get_intraday_data()
+
+        dataframe.reset_index(inplace=True)
+        signals_array = pd.DataFrame(self.generate_signal())
+        signals_array['date'] = pd.DatetimeIndex(signals_array['date'])
+        dataframe = dataframe.merge(pd.DataFrame(self.generate_signal()), on='date')
+        dataframe.set_index('date', inplace=True)
+
+        buying_events = dataframe.loc[dataframe['signal'] == 1].index.to_list()
+        selling_events = dataframe.loc[dataframe['signal'] == -1].index.to_list()
+
+        figure = go.Figure()
+
+        figure.add_trace(go.Scatter(x=dataframe.index, y=dataframe['adjClose'].values, name='adjClose',
+                                    line=dict(color='#000000', width=1)))
+
+        figure.add_trace(go.Scatter(x=buying_events, y=dataframe['adjClose'].loc[buying_events].values,
+                                    name='Buying Events', mode='markers',
+                                    marker=dict(color='#00FF00', size=8, symbol='triangle-up')))
+
+        figure.add_trace(go.Scatter(x=selling_events, y=dataframe['adjClose'].loc[selling_events].values,
+                                    name='Selling Events', mode='markers',
+                                    marker=dict(color='#FF0000', size=8, symbol='triangle-down')))
+
+        figure.update_layout(title_text='Signals', xaxis_title='Date', yaxis_title='Price')
+
+        figure.write_html(f'{self.ticker}.html', auto_open=True)
 
 
 class AbstractOms(ABC):
