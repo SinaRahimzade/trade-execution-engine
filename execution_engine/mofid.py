@@ -230,6 +230,17 @@ class MofidBroker(Broker, ABC):
 
         return watching_tickers
 
+    def get_orders_list_details(self):
+        while self.login_token is None:
+            try:
+                self.account_login()
+            except selenium.common.NoSuchElementException:
+                pass
+        request_response = requests.get(
+            url=config.MOFID["order_url"], headers=self._headers()
+        )
+        return request_response
+
     def get_orders_history(self, count=50):
         while self.login_token is None:
             try:
