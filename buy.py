@@ -23,8 +23,8 @@ class Tracker:
 
 
 def __main__():
-    user = "09123152886"
-    password = "14@15Dali110"
+    user = "user"
+    password = "pass"
     broker = MofidBroker(user, password)
     tracker = Tracker("ولغدر", broker)
 
