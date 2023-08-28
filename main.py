@@ -29,9 +29,3 @@ class Oms:
     @staticmethod
     def send_order(order_type, isin, quant, price):
         print(f"Sending order: {order_type}, {isin}, {quant}, {price}")
-
-
-username = "09123152886"
-password = "14@15Dali110"
-oms = MofidBroker(username=username, password=password)
-print(oms.get_portfolio().text)
