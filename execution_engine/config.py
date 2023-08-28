@@ -30,6 +30,6 @@ MOFID = {
 
 @dataclass
 class Influx:
-    token = "7VqIFiNN5RmJX9_CmaNiCo5jKTGkC0dchJIv0MSiJi7jwTN3Ziw89T0i2JmtX9uvBl91Ehy4i0f0oUk9k8GZPQ=="
+    token = "token"
     org = "delta"
     bucket = "stocks"
